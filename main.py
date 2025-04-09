@@ -94,6 +94,71 @@ def get_translation_prompt(source_language: str, target_language: str, query_sen
     
     return {"prompt": prompt}
 
+# Advanced Task Part 
+import string
+from fastapi import Query
+
+def normalize_word(word: str) -> str:
+    # remove common punctuation and convert to lowercase
+    return word.strip(string.punctuation).lower()
+
+def detect_stammering(text: str) -> bool:
+    """
+    for short setences (< 6 words) -> any word which is excessively long we can flag as stammering (over 20 chars) 
+    for sentences with 6-7 words, we check for adjacent (consecutive) repeated words
+    for sentencs of 8 or more words, we check for repeated n-grams (n=2, 3, 4) 
+    """
+    words = [normalize_word(word) for word in text.split() if normalize_word(word)]
+    
+    # For very short sentences, not enough words to decide normally.
+    if len(words) < 6:
+        # Check if any word is abnormally long.
+        for word in words:
+            if len(word) > 20:
+                return True
+        return False
+
+    # For sentences with 6 or 7 words, use adjacent repetition.
+    if len(words) < 8:
+        max_consec = 1
+        current = 1
+        for i in range(1, len(words)):
+            if words[i] == words[i - 1]:
+                current += 1
+                max_consec = max(max_consec, current)
+            else:
+                current = 1
+        return max_consec >= 3
+
+    # For sentences with 8 or more words, check for repeated n-grams for n in [2, 3, 4].
+    for n in [2, 3, 4]:
+        ngram_counts = {}
+        for i in range(len(words) - n + 1):
+            ngram = tuple(words[i:i+n])
+            ngram_counts[ngram] = ngram_counts.get(ngram, 0) + 1
+        for count in ngram_counts.values():
+            if count >= 2:
+                return True
+    return False
+
+
+# Endpoint for stammering detection
+@app.get("/stammering", summary="Detect stammering in a translated sentence")
+def stammering_detection(
+    source_sentence: str = Query(...),
+    translated_sentence: str = Query(...)
+):
+    """
+    Detects whether stammering is present in the translated sentence.
+    
+    The endpoint returns a JSON object:
+      { "has_stammer": <true|false> }
+    
+    The detection is based solely on the translated sentence.
+    """
+    result = detect_stammering(translated_sentence)
+    return {"has_stammer": result}
+
 
 # This block is useful if you want to run the server directly with Python.
 if __name__ == "__main__":
