@@ -398,12 +398,50 @@ Line 12: Response -> Yes (Expected: Yes)
 
 ---
 
+
 ## Code Organization
 
-- **main.py:** Contains the FastAPI application, endpoints, and helper functions (e.g., compute_embedding, detect_stammering).
-- **client.py:** The testing client script.
-- **JSONL Files:**  
+- **src/main.py:** Contains the FastAPI application, endpoints, and helper functions (e.g., `compute_embedding`, `detect_stammering`).
+- **tests/client.py:** The testing client script.
+- **tests/JSONL Files:**  
   - `translation_pairs.jsonl`
   - `translation_requests.jsonl`
   - `stammering_tests.jsonl`
 
+## Docker Containerization (Optional)
+
+If you wish to run your application in a containerized environment, follow these steps.
+
+### Prerequisites
+
+- **Docker:**  
+  - **Windows / macOS:** Install [Docker Desktop](https://www.docker.com/products/docker-desktop).  
+  - **Linux:** Follow the [official Docker Engine installation guide](https://docs.docker.com/engine/install/) for your distribution.
+
+### Build the Docker Image
+
+From the root directory of the repository (where the `Dockerfile` is located), run:
+
+```bash
+docker build -t translated-tech-test .
+```
+
+This command builds the Docker image and tags it as `translated-tech-test`.
+
+### Run the Docker Container
+
+Once the image is built, start the container with:
+
+```bash
+docker run -p 8000:8000 translated-tech-test
+```
+
+- The `-p 8000:8000` option maps port 8000 in the container to port 8000 on your host machine.
+- Your FastAPI service will be available at [http://127.0.0.1:8000](http://127.0.0.1:8000).
+
+### Verifying the Service
+
+- **Access the API Docs:**  
+  Navigate to [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) in your browser.
+- **Test with the Client Script:**  
+  You can run the client script on your host machine (e.g., `python tests/client.py`) to interact with the containerized application.
