@@ -39,8 +39,9 @@ The application demonstrates both basic and advanced features as per the test re
 1. **Clone the Repository:**
 
    ```bash
-   git clone <your-repository-url>
-   cd <your-repository-directory>
+    git clone https://github.com/MelDashti/Translated-Technical-Test.git
+    cd Translated-Technical-Test
+
    ```
 
 2. **Create and Activate a Virtual Environment:**
@@ -52,9 +53,26 @@ The application demonstrates both basic and advanced features as per the test re
 
 3. **Install Dependencies:**
 
+You have two options to install the project dependencies:
+
+1. **Using requirements.txt (Recommended):**
+
+   If the repository includes a `requirements.txt` file, run:
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. **Manual Installation:**
+
+   If you prefer to install the dependencies manually, use:
+
    ```bash
    pip install fastapi uvicorn numpy scikit-learn pydantic
    ```
+
+---
+
 
 ## Running the Application
 
