@@ -63,38 +63,37 @@ def add_translation_pair(pair: TranslationPair):
 # Endpoint to generate a translation prompt based on a query sentence
 @app.get("/prompt", summary="Retrieve a translation prompt")
 def get_translation_prompt(source_language: str, target_language: str, query_sentence: str):
-    
     source_lang = source_language
     target_lang = target_language
-    # Make sure we have data in our database
+    
     if not translation_db:
         raise HTTPException(status_code=404, detail="No translation pairs available.")
     
     query_embedding = compute_embedding(query_sentence)
     similarities = []
-
-    # Loop through translation pairs and compute cosine similarity for those matching the language criteria
+    # Collect similarity scores for matching pairs.
     for pair in translation_db:
         if pair["source_lang"] == source_lang and pair["target_lang"] == target_lang:
-            # Reshape arrays for cosine_similarity (expects 2D arrays)
-            sim = cosine_similarity(query_embedding.reshape(1, -1), pair["embedding"].reshape(1, -1))[0][0]
+            sim = cosine_similarity(query_embedding.reshape(1, -1),
+                                    pair["embedding"].reshape(1, -1))[0][0]
             similarities.append((sim, pair))
     
-    # If no matching pairs are found, return a 404
-    if not similarities:
-        raise HTTPException(status_code=404, detail="No matching translation pairs found.")
-    
-    # Sort the pairs by similarity, highest first, and choose up to 4
-    similarities.sort(key=lambda x: x[0], reverse=True)
-    top_pairs = [pair for _, pair in similarities[:4]]
-    
-    # here we build a prompt 
+    # Build the prompt irrespective of whether any matching pairs are found.
     prompt = f"Please translate the following sentence from {source_lang} to {target_lang}:\n'{query_sentence}'\n\n"
-    prompt += "Here are some sample translations for reference:\n"
-    for idx, pair in enumerate(top_pairs, start=1):
-        prompt += f"{idx}. {pair['sentence']}  -->  {pair['translation']}\n"
+    
+    if similarities:
+        # Sort and take the top 4 sample pairs if available.
+        similarities.sort(key=lambda x: x[0], reverse=True)
+        top_pairs = [pair for _, pair in similarities[:4]]
+        prompt += "Here are some sample translations for reference:\n"
+        for idx, pair in enumerate(top_pairs, start=1):
+            prompt += f"{idx}. {pair['sentence']}  -->  {pair['translation']}\n"
+    else:
+        # Instead of returning a 404, provide a fallback message.
+        prompt += "No sample translations available."
     
     return {"prompt": prompt}
+
 
 # This block is useful if you want to run the server directly with Python.
 if __name__ == "__main__":
